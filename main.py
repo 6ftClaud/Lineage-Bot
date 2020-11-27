@@ -18,7 +18,7 @@ UI_info = "/home/claud/.wine/drive_c/Program Files/Lineage II/system/WindowsInfo
 titlebar = 26
 border = 2
 # how long to wait until the bot starts
-seconds = 2
+seconds = 4
 # Set Archer/Mage
 player_class = "Mage"
 
@@ -39,21 +39,22 @@ vision = Vision(wincap.screenshot)
 vision.start()
 bot = BotActions(wincap.offset_x, wincap.offset_y, wincap.w, wincap.h, seconds, abilities)
 bot.start()
-utils = Utils(wincap.offset_x, wincap.offset_y, wincap.w, wincap.h, DEBUG, UI_info)
+utils = Utils(wincap.offset_x, wincap.offset_y, wincap.w, wincap.h, UI_info, wincap.screenshot)
 utils.start()
 wincap.set_buff_bar_pos(utils.buff_bar_pos)
 
 if DEBUG == False:
 	screen = curses.initscr()
 
-fps = 0
+
 while(True):
-	start = time.time()
+	
 
 	if wincap.screenshot is None:
 		continue
 
 	vision.screenshot = wincap.screenshot
+	utils.screenshot = wincap.screenshot
 
 	if not utils.solving_captcha:
 		if bot.state == BotState.INITIALIZING:
@@ -73,6 +74,13 @@ while(True):
 			if utils.rebuff():
 				bot.player_health = utils.current_player_health
 				bot.buffed = True
+	elif utils.solving_captcha:
+		bot.stop()
+		while True:
+			if not utils.solving_captcha:
+				bot.start()
+				break
+
 
 	# very slow, use only for debugging
 	if DEBUG == True:
@@ -88,7 +96,7 @@ while(True):
 		font = cv.FONT_HERSHEY_SIMPLEX
 		resized = cv.putText(resized, f"player health: {utils.current_player_health}%",(210, height - 85), font, 1, (0, 255, 0), 2, cv.LINE_AA)
 		resized = cv.putText(resized, f"enemy health: {utils.current_enemy_health}%",(210, height - 55), font, 1, (0, 255, 0), 2, cv.LINE_AA)
-		resized = cv.putText(resized, f"fps: {fps}",(210, height - 25), font, 1, (0, 255, 0), 2, cv.LINE_AA)
+		resized = cv.putText(resized, f"fps: {wincap.fps}",(210, height - 25), font, 1, (0, 255, 0), 2, cv.LINE_AA)
 		cv.imshow('Matches', resized)
 		cv.moveWindow('Matches', (wincap.offset_x + wincap.w), 0)
 		key = cv.waitKey(1)
@@ -107,7 +115,7 @@ while(True):
 		screen.addstr(f"Current player health is {utils.current_player_health}%\n")
 		screen.addstr(f"Current enemy health is {utils.current_enemy_health}%\n")
 		screen.addstr(f"{bot.message}\n")
-		screen.addstr(f"FPS: {fps}\n")
+		screen.addstr(f"FPS: {wincap.fps}\n")
 		screen.refresh()
 		if keyboard.is_pressed('q'):
 			wincap.stop()
@@ -116,6 +124,6 @@ while(True):
 			utils.stop()
 			curses.endwin()
 			break
-	fps = round(1.0 / (time.time() - start), 1)
+	
 
 exit(1)

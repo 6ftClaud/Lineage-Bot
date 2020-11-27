@@ -22,7 +22,7 @@ text = pytesseract.image_to_string('captcha.png')
 print(text)
 
 """
-f_path = "captcha2.png"
+f_path = "captcha.png"
 with open(f_path, 'rb') as f:
     j = requests.post('https://api.ocr.space/parse/image', files={f_path: f}, data=payload).json()
     if j['ParsedResults']:

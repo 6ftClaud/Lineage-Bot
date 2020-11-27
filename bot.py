@@ -108,7 +108,7 @@ class BotActions:
 		self.mouse.press(Button.right)
 		pyautogui.moveTo(distance, 0)
 		self.mouse.release(Button.right)
-		sleep(0.1)
+		sleep(0.25)
 
 	def get_screen_position(self, pos):
 		return (pos[0] + self.offset_x, pos[1] + self.offset_y)

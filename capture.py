@@ -4,6 +4,7 @@ import numpy as np
 import os
 import subprocess
 import cv2 as cv
+from time import time
 
 class WindowCapture:
 
@@ -18,6 +19,7 @@ class WindowCapture:
 	offset_x = 0
 	offset_y = 0
 	buff_bar_pos = (0, 0)
+	fps = 0
 
 	def __init__(self, border_pixels, titlebar_pixels):
 		self.lock = Lock()
@@ -47,7 +49,7 @@ class WindowCapture:
 		self.buff_bar_pos = buff_bar_pos
 
 	def get_screenshot(self):
-		img = ImageGrab.grab(bbox=(self.offset_x, self.offset_y, self.w - 45, self.h))
+		img = ImageGrab.grab(bbox=(self.offset_x, self.offset_y, self.w, self.h))
 		img = np.array(img)
 		# hide buff bar
 		# (y:h+y, x:w+x)
@@ -64,7 +66,10 @@ class WindowCapture:
 
 	def run(self):
 		while not self.stopped:
+			
+			start = time()
 			screenshot = self.get_screenshot()
 			self.lock.acquire()
 			self.screenshot = screenshot
 			self.lock.release()
+			self.fps = round(1.0 / (time() - start), 1)
