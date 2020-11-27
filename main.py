@@ -1,5 +1,6 @@
-from logic import BotActions, BotState
+from bot import BotActions, BotState
 from capture import WindowCapture
+from vision import Vision
 from utils import Utils
 import cv2 as cv
 import numpy as np
@@ -32,15 +33,18 @@ args = parser.parse_args()
 DEBUG = args.DEBUG
 
 wincap = WindowCapture(border, titlebar)
+wincap.start()
+time.sleep(0.5)
+vision = Vision(wincap.screenshot)
+vision.start()
 bot = BotActions(wincap.offset_x, wincap.offset_y, wincap.w, wincap.h, seconds, abilities)
-utils = Utils(wincap.offset_x, wincap.offset_y, DEBUG, UI_info)
+bot.start()
+utils = Utils(wincap.offset_x, wincap.offset_y, wincap.w, wincap.h, DEBUG, UI_info)
+utils.start()
 wincap.set_buff_bar_pos(utils.buff_bar_pos)
 
 if DEBUG == False:
 	screen = curses.initscr()
-wincap.start()
-utils.start()
-bot.start()
 
 fps = 0
 while(True):
@@ -49,26 +53,32 @@ while(True):
 	if wincap.screenshot is None:
 		continue
 
-	targets = wincap.get_enemy_coordinates()
-	bot.update_targets(targets)
+	vision.screenshot = wincap.screenshot
 
-	if bot.state == BotState.INITIALIZING:
-		os.system('xdotool windowactivate $(xdotool search --onlyvisible --name "Lineage II")')
-	elif bot.state == BotState.SEARCHING:
-		bot.enemy_health = utils.current_enemy_health
-	elif bot.state == BotState.ATTACKING:
-		bot.player_health = utils.current_player_health
-		bot.enemy_health = utils.current_enemy_health
-	elif bot.state == BotState.REBUFFING:
-		utils.screenshot = wincap.screenshot
-		if utils.rebuff() == True:
-			bot.buffed = True
+	if not utils.solving_captcha:
+		if bot.state == BotState.INITIALIZING:
+			os.system('xdotool windowactivate $(xdotool search --onlyvisible --name "Lineage II")')
+		elif bot.state == BotState.SEARCHING:
+			targets = vision.get_enemy_coordinates()
+			bot.update_targets(targets)
+			bot.player_health = utils.current_player_health
+			bot.enemy_health = utils.current_enemy_health
+		elif bot.state == BotState.ATTACKING:
+			targets = vision.get_enemy_coordinates()
+			bot.update_targets(targets)
+			bot.player_health = utils.current_player_health
+			bot.enemy_health = utils.current_enemy_health
+		elif bot.state == BotState.REBUFFING:
+			utils.screenshot = wincap.screenshot
+			if utils.rebuff():
+				bot.player_health = utils.current_player_health
+				bot.buffed = True
 
 	# very slow, use only for debugging
 	if DEBUG == True:
 		screenshot = wincap.screenshot
 		
-		for target in targets:
+		for target in bot.targets:
 			cv.circle(screenshot, (int(target[0]), int(target[1])), 15, (0, 255, 0), 2)
 		scale_percent = 60
 		width = int(screenshot.shape[1] * scale_percent / 100)
@@ -85,6 +95,7 @@ while(True):
 		if keyboard.is_pressed('q'):
 			cv.destroyAllWindows()
 			wincap.stop()
+			vision.stop()
 			bot.stop()
 			utils.stop()
 			break
@@ -93,7 +104,6 @@ while(True):
 		# output
 		screen.clear()
 		screen.addstr(f"CPU: {psutil.cpu_percent()}%, RAM: {psutil.virtual_memory().percent}%\n")
-		screen.addstr(f"{wincap.message}\n")
 		screen.addstr(f"Current player health is {utils.current_player_health}%\n")
 		screen.addstr(f"Current enemy health is {utils.current_enemy_health}%\n")
 		screen.addstr(f"{bot.message}\n")
@@ -101,6 +111,7 @@ while(True):
 		screen.refresh()
 		if keyboard.is_pressed('q'):
 			wincap.stop()
+			vision.stop()
 			bot.stop()
 			utils.stop()
 			curses.endwin()

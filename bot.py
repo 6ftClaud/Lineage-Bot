@@ -141,15 +141,14 @@ class BotActions:
 
 			elif self.state == BotState.SEARCHING:
 				self.message = "Looking for enemies"
-				if self.target():
-					self.lock.acquire()
-					self.state = BotState.ATTACKING
-					self.lock.release()
-				elif self.player_health <= 1:
-					sleep(2)
+				if self.player_health == 0:
 					self.buffed = False
 					self.lock.acquire()
 					self.state = BotState.REBUFFING
+					self.lock.release()
+				elif self.target():
+					self.lock.acquire()
+					self.state = BotState.ATTACKING
 					self.lock.release()
 				else:
 					self.turn_camera(250)
@@ -161,10 +160,10 @@ class BotActions:
 				self.lock.release()
 
 			elif self.state == BotState.REBUFFING:
-				if self.buffed == False:
-					pass
-				else:
+				if self.buffed == True:
 					self.lock.acquire()
 					self.state = BotState.SEARCHING
 					self.lock.release()
+				else:
+					pass
 

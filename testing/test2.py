@@ -16,12 +16,12 @@ payload = {'isOverlayRequired': False,
 image = cv.imread('captcha.png')
 image = cv.cvtColor(image, cv.COLOR_RGB2GRAY)
 image = cv.threshold(image, 0, 255, cv.THRESH_BINARY| cv.THRESH_OTSU)[1]
-image = cv.medianBlur(image, 3)
+image = cv.medianBlur(image, 1)
 cv.imwrite('captcha2.png', image)
-
-text = pytesseract.image_to_string(image)
+text = pytesseract.image_to_string('captcha.png')
 print(text)
 
+"""
 f_path = "captcha2.png"
 with open(f_path, 'rb') as f:
     j = requests.post('https://api.ocr.space/parse/image', files={f_path: f}, data=payload).json()
@@ -30,3 +30,6 @@ with open(f_path, 'rb') as f:
         print(result)
 
 # d6aaaaa8d888957
+# 84 184 308 75
+"""
+
