@@ -165,8 +165,9 @@ class Utils:
 		image = cv.cvtColor(image, cv.COLOR_RGB2GRAY)
 		image = cv.threshold(image, 0, 255, cv.THRESH_BINARY| cv.THRESH_OTSU)[1]
 		image = cv.medianBlur(image, 1)
-		cv.imwrite('img/captcha.png', image)
-		f_path = "img/captcha.png"
+		BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+		f_path = BASE_DIR + "/img/captcha.png"
+		cv.imwrite(f_path, image)
 		with open(f_path, 'rb') as f:
 			j = requests.post('https://api.ocr.space/parse/image', files={f_path: f}, data=payload).json()
 			if j['ParsedResults']:

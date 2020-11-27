@@ -73,14 +73,17 @@ class BotActions:
 			keyboard.press('SHIFT')
 			pyautogui.click(x, y + 30, _pause=False)
 			keyboard.release('SHIFT')
+			sleep(0.05)
 			if self.enemy_health >= 90:
 				self.message = f"Clicking at X: {x}, y: {y}"
 				self.targets.clear()
 				return True
-			target_i += 1
+			else:
+				target_i += 1
 
 
 	def attack(self):
+		sleep(0.05)
 		ability = self.DEBUFF
 		keyboard.send(ability)
 		while not self.stopped:
@@ -102,7 +105,7 @@ class BotActions:
 			return sqrt((pos[0] - my_pos[0])**2 + (pos[1] - my_pos[1])**2)
 		targets.sort(key=pythagorean_distance)
 		# remove targets that are further away than SEARCH_RADIUS
-		targets = [t for t in targets if pythagorean_distance(t) > 250]
+		targets = [t for t in targets if pythagorean_distance(t) > 80]
 		return targets
 
 	def turn_camera(self, distance):
@@ -110,6 +113,7 @@ class BotActions:
 		self.mouse.press(Button.right)
 		pyautogui.moveTo(distance, 0)
 		self.mouse.release(Button.right)
+		sleep(0.5)
 
 	def get_screen_position(self, pos):
 		return (pos[0] + self.offset_x, pos[1] + self.offset_y)
