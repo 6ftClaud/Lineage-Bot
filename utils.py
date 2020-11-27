@@ -79,7 +79,7 @@ class Utils:
 
 		enemy_status = lines[24:26]
 		self.enemy_hp_x_pos = int(float(enemy_status[0])) + 16
-		self.enemy_hp_y_pos = int(float(enemy_status[1])) + 26
+		self.enemy_hp_y_pos = int(float(enemy_status[1])) + 28
 		self.enemy_hp_bar_width = 150
 		self.enemy_hp_bar_height = 1
 
@@ -97,7 +97,6 @@ class Utils:
 		w = self.player_hp_bar_width + x
 		im = self.screenshot[y:h, x:w]
 		rgb = im[0]
-		max_player_health = 30
 		current_player_health = 0
 		for r in range(0, len(rgb), 5):
 			r = rgb[r][2]
@@ -134,21 +133,18 @@ class Utils:
 
 	def rebuff(self):
 		self.message = f"Rebuffing"
-		try:
-			sleep(3)
-			pyautogui.click((self.w / 2 + self.offset_x), (self.h / 2 + self.offset_y - 85))
-			sleep(5)
-			keys.send('F11')
-			self.target("/target gatekeeper")
-			self.target("/target gatekeeper")
-			while not self.arrived_at_npc():
-				sleep(0.01)
-			pyautogui.click(self.farmingzones[0], self.farmingzones[1])
-			sleep(0.5)
-			pyautogui.click(self.dmg1[0], self.dmg1[1])
-			return True
-		except:
-			raise Exception ("Could not rebuff.")
+		sleep(3)
+		pyautogui.click((self.w / 2 + self.offset_x), (self.h / 2 + self.offset_y - 85))
+		sleep(5)
+		keys.send('F11')
+		self.target("/target gatekeeper")
+		self.target("/target gatekeeper")
+		while not self.arrived_at_npc():
+			sleep(0.01)
+		pyautogui.click(self.farmingzones[0], self.farmingzones[1])
+		sleep(0.5)
+		pyautogui.click(self.dmg1[0], self.dmg1[1])
+		return True
 
 	def solve_captcha(self):
 		x = self.quest_window_x + 50
@@ -185,11 +181,10 @@ class Utils:
 		image = ImageGrab.grab(bbox=(x, y, w + x, h + y))
 		text = pytesseract.image_to_string(image)
 		if "captcha" in text:
-			print("Yes")
 			self.solving_captcha = True
 			self.solve_captcha()
 		else:
-			print("No")
+			pass
 
 	def arrived_at_npc(self):
 		x = self.quest_window_x
@@ -198,7 +193,6 @@ class Utils:
 		h = 20 + y
 		image = ImageGrab.grab(bbox=(x, y, w, h))
 		rgb = image.getpixel((200, 10))
-		print(rgb)
 		if rgb == (16, 25, 52):
 			return True
 		else:

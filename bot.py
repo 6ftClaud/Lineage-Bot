@@ -79,11 +79,16 @@ class BotActions:
 				target_i += 1
 
 	def attack(self):
+		timestamp = time()
 		sleep(0.05)
 		ability = self.DEBUFF
 		keyboard.send(ability)
 		while not self.stopped:
 			if self.enemy_health == 0:
+				break
+			elif (timestamp - time()) > 15:
+				keyboard.send('ESC')
+				self.turn_camera(250)
 				break
 			elif self.player_health <= 70:
 				ability = self.SUSTAIN
