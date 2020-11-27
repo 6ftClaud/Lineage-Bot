@@ -43,84 +43,85 @@ utils = Utils(wincap.offset_x, wincap.offset_y, wincap.w, wincap.h, UI_info, win
 utils.start()
 wincap.set_buff_bar_pos(utils.buff_bar_pos)
 
-if DEBUG == False:
-	screen = curses.initscr()
+def main():
+	if DEBUG == False:
+		screen = curses.initscr()
 
-fps = 0
-while(True):
+	fps = 0
+	while(True):
 
-	start = time()
-	vision.screenshot = wincap.screenshot
-	utils.screenshot = wincap.screenshot
-	
-	if not utils.solving_captcha:
-		if bot.state == BotState.INITIALIZING:
-			os.system('xdotool windowactivate $(xdotool search --onlyvisible --name "Lineage II")')
-		elif bot.state == BotState.SEARCHING:
-			bot.update_targets(vision.targets)
-			bot.enemy_health = utils.current_enemy_health
-			bot.player_health = utils.current_player_health
-		elif bot.state == BotState.ATTACKING:
-			bot.enemy_health = utils.current_enemy_health
-			bot.player_health = utils.current_player_health
-		elif bot.state == BotState.REBUFFING:
-			if utils.rebuff():
+		start = time()
+		vision.screenshot = wincap.screenshot
+		utils.screenshot = wincap.screenshot
+		bot.update_targets(vision.targets)
+		
+		if not utils.solving_captcha:
+			if bot.state == BotState.INITIALIZING:
+				os.system('xdotool windowactivate $(xdotool search --onlyvisible --name "Lineage II")')
+			elif bot.state == BotState.SEARCHING:
+				bot.enemy_health = utils.current_enemy_health
 				bot.player_health = utils.current_player_health
-				bot.buffed = True
+			elif bot.state == BotState.ATTACKING:
+				bot.enemy_health = utils.current_enemy_health
+				bot.player_health = utils.current_player_health
+			elif bot.state == BotState.REBUFFING:
+				if utils.rebuff():
+					bot.player_health = utils.current_player_health
+					bot.buffed = True
 
-	elif utils.solving_captcha:
-		bot.stop()
-		while True:
-			if not utils.solving_captcha:
-				bot.start()
+		elif utils.solving_captcha:
+			bot.stop()
+			while True:
+				if not utils.solving_captcha:
+					bot.start()
+					break
+
+		
+		# slow, use only for debugging
+		if DEBUG == True:
+			screenshot = wincap.screenshot
+			for target in bot.targets:
+				cv.circle(screenshot, (int(target[0]), int(target[1])), 15, (0, 255, 0), 2)
+			scale_percent = 60
+			width = int(screenshot.shape[1] * scale_percent / 100)
+			height = int(screenshot.shape[0] * scale_percent / 100)
+			dim = (width, height)
+			font = cv.FONT_HERSHEY_SIMPLEX
+			resized = cv.resize(screenshot, dim, interpolation = cv.INTER_LINEAR)
+			resized = cv.putText(resized, f"player health: {utils.current_player_health}%",(210, height - 85), font, 1, (0, 255, 0), 2, cv.LINE_AA)
+			resized = cv.putText(resized, f"enemy health: {utils.current_enemy_health}%",(210, height - 55), font, 1, (0, 255, 0), 2, cv.LINE_AA)
+			resized = cv.putText(resized, f"fps: {wincap.fps}",(210, height - 25), font, 1, (0, 255, 0), 2, cv.LINE_AA)
+			cv.imshow('Matches', resized)
+			cv.moveWindow('Matches', (wincap.offset_x + wincap.w), 0)
+			key = cv.waitKey(1)
+			if keyboard.is_pressed('q'):
+				cv.destroyAllWindows()
+				wincap.stop()
+				vision.stop()
+				bot.stop()
+				utils.stop()
 				break
 
-	
-	# slow, use only for debugging
-	if DEBUG == True:
-		screenshot = wincap.screenshot
-		for target in bot.targets:
-			cv.circle(screenshot, (int(target[0]), int(target[1])), 15, (0, 255, 0), 2)
-		scale_percent = 60
-		width = int(screenshot.shape[1] * scale_percent / 100)
-		height = int(screenshot.shape[0] * scale_percent / 100)
-		dim = (width, height)
-		font = cv.FONT_HERSHEY_SIMPLEX
-		resized = cv.resize(screenshot, dim, interpolation = cv.INTER_AREA)
-		resized = cv.putText(resized, f"player health: {utils.current_player_health}%",(210, height - 85), font, 1, (0, 255, 0), 2, cv.LINE_AA)
-		resized = cv.putText(resized, f"enemy health: {utils.current_enemy_health}%",(210, height - 55), font, 1, (0, 255, 0), 2, cv.LINE_AA)
-		resized = cv.putText(resized, f"fps: {wincap.fps}",(210, height - 25), font, 1, (0, 255, 0), 2, cv.LINE_AA)
-		cv.imshow('Matches', resized)
-		cv.moveWindow('Matches', (wincap.offset_x + wincap.w), 0)
-		key = cv.waitKey(1)
-		if keyboard.is_pressed('q'):
-			cv.destroyAllWindows()
-			wincap.stop()
-			vision.stop()
-			bot.stop()
-			utils.stop()
-			break
+		elif DEBUG == False:
+			# output
+			screen.clear()
+			screen.addstr(f"Current player health is {utils.current_player_health}%\n")
+			screen.addstr(f"Current enemy health is {utils.current_enemy_health}%\n")
+			screen.addstr(f"{bot.message}\n\n")
+			screen.addstr(f"Main loop fps: {fps}\n")
+			screen.addstr(f"capture fps: {wincap.fps}\n")
+			screen.addstr(f"bot fps: {bot.fps}\n")
+			screen.addstr(f"utils fps: {utils.fps}\n")
+			screen.addstr(f"vision fps: {vision.fps}\n")
+			screen.refresh()
+			if keyboard.is_pressed('q'):
+				wincap.stop()
+				vision.stop()
+				bot.stop()
+				utils.stop()
+				curses.endwin()
+				break
+		fps = round(1.0 / (time() - start), 1)
 
-	elif DEBUG == False:
-		# output
-		screen.clear()
-		screen.addstr(f"Current player health is {utils.current_player_health}%\n")
-		screen.addstr(f"Current enemy health is {utils.current_enemy_health}%\n")
-		screen.addstr(f"{bot.message}\n\n")
-		screen.addstr(f"Main loop fps: {fps}\n")
-		screen.addstr(f"capture fps: {wincap.fps}\n")
-		screen.addstr(f"bot fps: {bot.fps}\n")
-		screen.addstr(f"utils fps: {utils.fps}\n")
-		screen.addstr(f"vision fps: {vision.fps}\n")
-		screen.refresh()
-		if keyboard.is_pressed('q'):
-			wincap.stop()
-			vision.stop()
-			bot.stop()
-			utils.stop()
-			curses.endwin()
-			break
-	fps = round(1.0 / (time() - start), 1)
-	
-
-exit(1)
+if __name__=="__main__":
+    main()

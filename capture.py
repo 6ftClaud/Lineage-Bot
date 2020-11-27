@@ -39,8 +39,8 @@ class WindowCapture:
 		self.cropped_x = border_pixels + self.offset_x
 		self.cropped_y = titlebar_pixels + self.offset_y
 
-		self.w = window_rect[2] + self.cropped_x
-		self.h = window_rect[3] + self.cropped_y
+		self.w = window_rect[2]
+		self.h = window_rect[3]
 
 		self.mon = {'top' : self.offset_y, 'left' : self.offset_x, 'width' : self.w, 'height' : self.h}
 

@@ -23,16 +23,15 @@ class Vision:
 		# forms a white bar in order to get the X and Y coordinates with the findContours and rectangle cv functions
 		kernel = cv.getStructuringElement(cv.MORPH_RECT, (50, 5))
 		enemies = cv.morphologyEx(enemies, cv.MORPH_CLOSE, kernel)
-		#enemies = cv.erode(enemies, kernel, iterations=1)
-		#enemies = cv.dilate(enemies, kernel, iterations=1)
-		(contours, hierarchy) = cv.findContours(enemies, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+		(contours, hierarchy) = cv.findContours(enemies, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 		# extracting enemy x and y coordinates from contours
 		targets = []
+		append = targets.append
 		for c in contours:
-			if cv.contourArea(c) > 20:
+			if cv.contourArea(c) > 50:
 				x, y, w, h = cv.boundingRect(c)
 				target = ((x + w / 2), (y + h / 2))
-				targets.append(target)
+				append(target)
 		return targets
 
 	def start(self):
