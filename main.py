@@ -50,8 +50,8 @@ fps = 0
 while(True):
 
 	start = time()
-	vision.update_screenshot(wincap.screenshot)
-	utils.update_screenshot(wincap.screenshot)
+	vision.screenshot = wincap.screenshot
+	utils.screenshot = wincap.screenshot
 	
 	if not utils.solving_captcha:
 		if bot.state == BotState.INITIALIZING:
@@ -63,7 +63,6 @@ while(True):
 		elif bot.state == BotState.ATTACKING:
 			bot.enemy_health = utils.current_enemy_health
 			bot.player_health = utils.current_player_health
-			bot.update_targets(vision.targets)
 		elif bot.state == BotState.REBUFFING:
 			if utils.rebuff():
 				bot.player_health = utils.current_player_health

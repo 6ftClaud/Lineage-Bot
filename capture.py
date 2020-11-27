@@ -1,9 +1,7 @@
 from threading import Thread, Lock
-from PIL import ImageGrab
+from mss import mss
 import numpy as np
 import os
-import subprocess
-import cv2 as cv
 from time import time
 
 class WindowCapture:
@@ -20,6 +18,8 @@ class WindowCapture:
 	offset_y = 0
 	buff_bar_pos = (0, 0)
 	fps = 0
+	sct = mss()
+	mon = None
 
 	def __init__(self, border_pixels, titlebar_pixels):
 		self.lock = Lock()
@@ -33,25 +33,27 @@ class WindowCapture:
 		window_rect[2] = int(float(variables[4]))
 		window_rect[3] = int(float(variables[5]))
 
-		self.cropped_x = border_pixels + self.offset_x
-		self.cropped_y = titlebar_pixels + self.offset_y
-
 		self.offset_x = window_rect[0]
 		self.offset_y = window_rect[1]
 
-		self.w = window_rect[2] + self.offset_x
-		self.h = window_rect[3] + self.offset_y
+		self.cropped_x = border_pixels + self.offset_x
+		self.cropped_y = titlebar_pixels + self.offset_y
+
+		self.w = window_rect[2] + self.cropped_x
+		self.h = window_rect[3] + self.cropped_y
+
+		self.mon = {'top' : self.offset_y, 'left' : self.offset_x, 'width' : self.w, 'height' : self.h}
 
 
 	def set_buff_bar_pos(self, buff_bar_pos):
 		self.buff_bar_pos = buff_bar_pos
 
 	def get_screenshot(self):
-		img = ImageGrab.grab(bbox=(self.offset_x, self.offset_y, self.w, self.h))
-		img = np.array(img)
+		#img = ImageGrab.grab(bbox=(self.offset_x, self.offset_y, self.w, self.h))
+		img = np.array(self.sct.grab(self.mon))
 		# hide buff bar
 		# (y:h+y, x:w+x)
-		img[int(self.buff_bar_pos[1]):105 + int(self.buff_bar_pos[1]), int(self.buff_bar_pos[0]):325 + int(self.buff_bar_pos[0])] = (0, 0, 0)
+		img[int(self.buff_bar_pos[1]):105 + int(self.buff_bar_pos[1]), int(self.buff_bar_pos[0]):325 + int(self.buff_bar_pos[0])] = (0, 0, 0, 0)
 		return img
 
 	def start(self):

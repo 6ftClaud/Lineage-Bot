@@ -1,51 +1,90 @@
-import requests
-import cv2 as cv
-import pytesseract
+import time
+
+import cv2
+import mss
+import numpy
 import os
-from PIL import Image, ImageGrab
-import numpy as np
-pytesseract.pytesseract.tesseract_cmd = r'/usr/bin/tesseract'
-os.environ['TESSDATA_PREFIX'] = '/usr/share/tessdata'
+import cv2 as cv
+
+window_rect = [0, 0, 0, 0]
+
 data = os.popen('wmctrl -lG | grep "Lineage II"').read()
 variables = data.split()
-offset_x = int(float(variables[2]))
-offset_y = int(float(variables[3]))
-window_w = int(float(variables[4]))
-window_h = int(float(variables[5]))
+window_rect[0] = int(float(variables[2]))
+window_rect[1] = int(float(variables[3]))
+window_rect[2] = int(float(variables[4]))
+window_rect[3] = int(float(variables[5]))
 
-x = 0 + 50 + offset_x
-y = 199 + 115 + offset_y
-w = 190
-h = 50
-print(x, y, w, h)
-api_key = 'd6aaaaa8d888957'
-payload = {'isOverlayRequired': False,
-				'apikey': api_key,
-				'OCREngine': 2,
-				'language': 'eng',}
-image = ImageGrab.grab(bbox=(x, y, w + x, h + y))
-image = np.array(image)
-image = cv.cvtColor(image, cv.COLOR_RGB2GRAY)
-image = cv.threshold(image, 0, 255, cv.THRESH_BINARY| cv.THRESH_OTSU)[1]
-image = cv.medianBlur(image, 1)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-f_path = BASE_DIR + "/img/captcha.png"
-cv.imwrite(f_path, image)
+offset_x = window_rect[0]
+offset_y = window_rect[1]
+border_pixels = 2
+titlebar_pixels = 26
+cropped_x = border_pixels + offset_x
+cropped_y = titlebar_pixels + offset_y
 
-with open(f_path, 'rb') as f:
-	j = requests.post('https://api.ocr.space/parse/image', files={f_path: f}, data=payload).json()
-	if j['ParsedResults']:
-		result = j['ParsedResults'][0]['ParsedText']
+w = window_rect[2]
+h = window_rect[3]
 
-"""
-f_path = "captcha.png"
-with open(f_path, 'rb') as f:
-    j = requests.post('https://api.ocr.space/parse/image', files={f_path: f}, data=payload).json()
-    if j['ParsedResults']:
-        result = j['ParsedResults'][0]['ParsedText']
-        print(result)
+mon = {'top' : offset_y, 'left' : offset_x, 'width' : w, 'height' : h}
+print(mon)
 
-# d6aaaaa8d888957
-# 84 184 308 75
-"""
 
+lines = []
+with open('/home/claud/.wine/drive_c/Program Files/Lineage II/system/WindowsInfo.ini', 'r') as file:
+	for line in file:
+		if "=" in line:
+			variable, value = line.split('=')
+			lines.append(value)
+
+player_status = lines[16:18]
+player_hp_x_pos = int(float(player_status[0])) + 16
+player_hp_y_pos = int(float(player_status[1])) + 41
+player_hp_bar_width = 150
+player_hp_bar_height = 1
+
+y = player_hp_y_pos
+h = player_hp_bar_height + y
+x = player_hp_x_pos
+w = player_hp_bar_width + x
+
+
+
+with mss.mss() as sct:
+	# Part of the screen to capture
+
+	while "Screen capturing":
+		last_time = time.time()
+
+		# Get raw pixels from the screen, save it to a Numpy array
+		img = numpy.array(sct.grab(mon))
+
+		y = player_hp_y_pos
+		h = player_hp_bar_height + y
+		x = player_hp_x_pos
+		w = player_hp_bar_width + x
+		im = img[y:h, x:w]
+		cv.imwrite('test3.png', im)
+		rgb = im[0]
+		max_player_health = 30
+		current_player_health = 0
+		for r in range(0, len(rgb), 5):
+			r = rgb[r][2]
+			if r >= 214:
+				current_player_health += 1.0
+		percent_health = current_player_health * 100.0 / max_player_health
+		percent_health = round(percent_health, 1)
+		print(percent_health)
+		break
+
+		# Display the picture
+		cv2.imshow("OpenCV/Numpy normal", img)
+
+		# Display the picture in grayscale
+		# cv2.imshow('OpenCV/Numpy grayscale',
+		#            cv2.cvtColor(img, cv2.COLOR_BGRA2GRAY))
+
+
+		# Press "q" to quit
+		if cv2.waitKey(25) & 0xFF == ord("q"):
+			cv2.destroyAllWindows()
+			break

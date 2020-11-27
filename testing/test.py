@@ -4,13 +4,28 @@ from PIL import Image, ImageGrab
 import numpy as np
 import pyautogui
 import cv2 as cv
+import mss
 # find window offset
 data = os.popen('wmctrl -lG | grep "Lineage II"').read()
 variables = data.split()
-offset_x = int(float(variables[2]))
-offset_y = int(float(variables[3]))
-window_w = int(float(variables[4]))
-window_h = int(float(variables[5]))
+window_rect = [0, 0, 0, 0]
+border_pixels = 2
+titlebar_pixels = 26
+window_rect[0] = int(float(variables[2]))
+window_rect[1] = int(float(variables[3]))
+window_rect[2] = int(float(variables[4]))
+window_rect[3] = int(float(variables[5]))
+
+offset_x = window_rect[0]
+offset_y = window_rect[1]
+
+cropped_x = border_pixels + offset_x
+cropped_y = titlebar_pixels + offset_y
+
+w = window_rect[2] + cropped_x
+h = window_rect[3] + cropped_y
+
+mon = {'top' : offset_x, 'left' : offset_y, 'width' : w, 'height' : h}
 max_player_health = 30.0
 lines = []
 with open('/home/claud/.wine/drive_c/Program Files/Lineage II/system/WindowsInfo.ini', 'r') as file:
@@ -41,13 +56,15 @@ y = player_hp_y_pos
 h = player_hp_bar_height + y
 x = player_hp_x_pos
 w = player_hp_bar_width + x
+
 # (y:h+y, x:w+x)
-img = ImageGrab.grab(bbox=(offset_x, offset_y, window_w + offset_x, window_h+ offset_y))
-img = np.array(img)
-img[int(buff_bar_pos[1]):105 + int(buff_bar_pos[1]), int(buff_bar_pos[0]):325 + int(buff_bar_pos[0])] = (0, 0, 0)
+sct = mss.mss()
+img = np.array(sct.grab(mon))
+#img[int(buff_bar_pos[1]):105 + int(buff_bar_pos[1]), int(buff_bar_pos[0]):325 + int(buff_bar_pos[0])] = (0, 0, 0, 0)
+cv.imwrite('test2.png', img)
 im = img[y:h, x:w]
-cv.imwrite('test2.png', im)
-rgb = im[0][:][:][:]
+rgb = img[0][:][:][:]
+cv.imwrite('test.png', im)
 percent_health = 0
 current_player_health = 0
 for r in range(0, len(rgb), 5):

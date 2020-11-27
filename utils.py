@@ -1,5 +1,4 @@
 from PIL import Image, ImageGrab
-from matplotlib import cm
 from threading import Thread, Lock
 import keyboard as keys
 from pynput import keyboard
@@ -97,10 +96,11 @@ class Utils:
 		x = self.player_hp_x_pos
 		w = self.player_hp_bar_width + x
 		im = self.screenshot[y:h, x:w]
-		rgb = im[0][:][:][:]
+		rgb = im[0]
+		max_player_health = 30
 		current_player_health = 0
 		for r in range(0, len(rgb), 5):
-			r = rgb[r][0]
+			r = rgb[r][2]
 			if r >= 214:
 				current_player_health += 1.0
 		percent_health = current_player_health * 100.0 / self.max_player_health
@@ -113,10 +113,10 @@ class Utils:
 		x = self.enemy_hp_x_pos
 		w = self.enemy_hp_bar_width + x
 		im = self.screenshot[y:h, x:w]
-		rgb = im[0][:][:][:]
+		rgb = im[0]
 		current_enemy_health = 0
 		for r in range(0, len(rgb), 5):
-			r = rgb[r][0]
+			r = rgb[r][2]
 			if r == 214:
 				current_enemy_health += 1.0
 		enemy_percent_health = current_enemy_health * 100.0 / self.max_enemy_health
@@ -165,7 +165,7 @@ class Utils:
 		image = cv.cvtColor(image, cv.COLOR_RGB2GRAY)
 		image = cv.threshold(image, 0, 255, cv.THRESH_BINARY| cv.THRESH_OTSU)[1]
 		image = cv.medianBlur(image, 1)
-		BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+		BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 		f_path = BASE_DIR + "/img/captcha.png"
 		cv.imwrite(f_path, image)
 		with open(f_path, 'rb') as f:
@@ -206,11 +206,6 @@ class Utils:
 
 	def get_screen_position(self, pos):
 		return (pos[0] + self.offset_x, pos[1] + self.offset_y)
-
-	def update_screenshot(self, screenshot):
-		self.lock.acquire()
-		self.screenshot = screenshot
-		self.lock.release()
 
 	def start(self):
 		self.stopped = False

@@ -64,8 +64,6 @@ class BotActions:
 
 	def target(self):
 		target_i = 0
-		if not self.targets:
-			sleep(0.5)
 		targets = self.target_sorting(self.targets)
 
 		while not self.stopped and target_i < len(targets):
@@ -73,14 +71,12 @@ class BotActions:
 			keyboard.press('SHIFT')
 			pyautogui.click(x, y + 30, _pause=False)
 			keyboard.release('SHIFT')
-			sleep(0.05)
-			if self.enemy_health >= 90:
+			sleep(0.1)
+			if self.enemy_health == 100:
 				self.message = f"Clicking at X: {x}, y: {y}"
-				self.targets.clear()
 				return True
 			else:
 				target_i += 1
-
 
 	def attack(self):
 		sleep(0.05)
@@ -88,7 +84,6 @@ class BotActions:
 		keyboard.send(ability)
 		while not self.stopped:
 			if self.enemy_health == 0:
-				keyboard.send('ESC')
 				break
 			elif self.player_health <= 70:
 				ability = self.SUSTAIN

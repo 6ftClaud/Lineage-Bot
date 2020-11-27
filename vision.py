@@ -1,5 +1,4 @@
 from threading import Thread, Lock
-from PIL import ImageGrab
 import numpy as np
 import cv2 as cv
 from time import time
@@ -35,11 +34,6 @@ class Vision:
 				target = ((x + w / 2), (y + h / 2))
 				targets.append(target)
 		return targets
-
-	def update_screenshot(self, screenshot):
-		self.lock.acquire()
-		self.screenshot = screenshot
-		self.lock.release()
 
 	def start(self):
 		self.stopped = False
