@@ -2,12 +2,14 @@ from threading import Thread, Lock
 from PIL import ImageGrab
 import numpy as np
 import cv2 as cv
+from time import time
 
 class Vision:
 
 	# properties
 	screenshot = None
 	targets = []
+	fps=0
 
 	def __init__(self, screenshot):
 		self.lock = Lock()
@@ -30,9 +32,14 @@ class Vision:
 		for c in contours:
 			if cv.contourArea(c) > 20:
 				x, y, w, h = cv.boundingRect(c)
-				target = ((x + w / 2), (y + h / 2) + 35)
+				target = ((x + w / 2), (y + h / 2))
 				targets.append(target)
 		return targets
+
+	def update_screenshot(self, screenshot):
+		self.lock.acquire()
+		self.screenshot = screenshot
+		self.lock.release()
 
 	def start(self):
 		self.stopped = False
@@ -44,7 +51,7 @@ class Vision:
 
 	def run(self):
 		while not self.stopped:
+			start = time()
 			targets = self.get_enemy_coordinates()
-			self.lock.acquire()
 			self.targets = targets
-			self.lock.release()
+			self.fps = round(1.0 / (time() - start), 1)

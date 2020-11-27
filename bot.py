@@ -1,9 +1,9 @@
-from pynput.mouse import Button, Controller
 from threading import Thread, Lock
 from time import sleep, time
 from math import sqrt
 import pyautogui
 import keyboard
+from pynput.mouse import Button, Controller
 import os
 
 
@@ -44,6 +44,7 @@ class BotActions:
 	DAMAGE = ''
 	SUSTAIN = ''
 	TOGGLE = ''
+	fps=0
 
 	def __init__(self, offset_x, offset_y, w, h, INITIALIZING_SECONDS, abilities):
 		self.lock = Lock()
@@ -63,26 +64,30 @@ class BotActions:
 
 	def target(self):
 		target_i = 0
+		if not self.targets:
+			sleep(0.5)
 		targets = self.target_sorting(self.targets)
 
 		while not self.stopped and target_i < len(targets):
 			x, y = self.get_screen_position(targets[target_i])
-			pyautogui.moveTo(x, y, _pause=False)
 			keyboard.press('SHIFT')
-			pyautogui.click()
+			pyautogui.click(x, y + 30, _pause=False)
 			keyboard.release('SHIFT')
-			if self.enemy_health > 99:
+			if self.enemy_health >= 90:
 				self.message = f"Clicking at X: {x}, y: {y}"
+				self.targets.clear()
 				return True
 			target_i += 1
 
 
 	def attack(self):
-		sleep(0.1)
 		ability = self.DEBUFF
 		keyboard.send(ability)
 		while not self.stopped:
-			if self.player_health < 70:
+			if self.enemy_health == 0:
+				keyboard.send('ESC')
+				break
+			elif self.player_health <= 70:
 				ability = self.SUSTAIN
 				keyboard.send(ability)
 			else:
@@ -90,9 +95,6 @@ class BotActions:
 				keyboard.send(ability)
 			self.message = f"Clicking {ability}"
 			sleep(0.05)
-			if self.enemy_health == 0:
-				keyboard.send('ESC')
-				break
 
 	def target_sorting(self, targets):
 		my_pos = (self.window_w / 2, self.window_h / 2)
@@ -100,7 +102,7 @@ class BotActions:
 			return sqrt((pos[0] - my_pos[0])**2 + (pos[1] - my_pos[1])**2)
 		targets.sort(key=pythagorean_distance)
 		# remove targets that are further away than SEARCH_RADIUS
-		targets = [t for t in targets if pythagorean_distance(t) > 80]
+		targets = [t for t in targets if pythagorean_distance(t) > 250]
 		return targets
 
 	def turn_camera(self, distance):
@@ -108,7 +110,6 @@ class BotActions:
 		self.mouse.press(Button.right)
 		pyautogui.moveTo(distance, 0)
 		self.mouse.release(Button.right)
-		sleep(0.25)
 
 	def get_screen_position(self, pos):
 		return (pos[0] + self.offset_x, pos[1] + self.offset_y)
@@ -131,6 +132,7 @@ class BotActions:
 		# this is the main logic controller
 	def run(self):
 		while not self.stopped:
+			start = time()
 			if self.state == BotState.INITIALIZING:
 				sleep(self.INITIALIZING_SECONDS)
 				sleep(0.25)
@@ -166,4 +168,5 @@ class BotActions:
 					self.lock.release()
 				else:
 					pass
+			self.fps = round(1.0 / (time() - start), 1)
 

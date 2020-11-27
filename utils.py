@@ -47,6 +47,7 @@ class Utils:
 	offset_y = 0
 	w = 0
 	h = 0
+	fps=0
 
 	def __init__(self, offset_x, offset_y, w, h, UI_info, screenshot):
 		self.lock = Lock()
@@ -164,7 +165,7 @@ class Utils:
 		image = cv.cvtColor(image, cv.COLOR_RGB2GRAY)
 		image = cv.threshold(image, 0, 255, cv.THRESH_BINARY| cv.THRESH_OTSU)[1]
 		image = cv.medianBlur(image, 1)
-		cv.imwrite('img/captcha.png')
+		cv.imwrite('img/captcha.png', image)
 		f_path = "img/captcha.png"
 		with open(f_path, 'rb') as f:
 			j = requests.post('https://api.ocr.space/parse/image', files={f_path: f}, data=payload).json()
@@ -205,6 +206,11 @@ class Utils:
 	def get_screen_position(self, pos):
 		return (pos[0] + self.offset_x, pos[1] + self.offset_y)
 
+	def update_screenshot(self, screenshot):
+		self.lock.acquire()
+		self.screenshot = screenshot
+		self.lock.release()
+
 	def start(self):
 		self.stopped = False
 		t = Thread(target=self.run)
@@ -215,16 +221,15 @@ class Utils:
 
 	def run(self):
 		while not self.stopped:
+			start = time()
 			if (time() - self.timestamp) > 30:
 				self.check_for_antibot()
 				self.timestamp = time()
 
 			current_enemy_health = self.enemy_health()
-			self.lock.acquire()
-			self.current_enemy_health = current_enemy_health
-			self.lock.release()
-
 			current_player_health = self.player_health()
 			self.lock.acquire()
+			self.current_enemy_health = current_enemy_health
 			self.current_player_health = current_player_health
 			self.lock.release()
+			self.fps = round(1.0 / (time() - start), 1)

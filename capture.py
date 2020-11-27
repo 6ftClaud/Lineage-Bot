@@ -33,8 +33,6 @@ class WindowCapture:
 		window_rect[2] = int(float(variables[4]))
 		window_rect[3] = int(float(variables[5]))
 
-	
-
 		self.cropped_x = border_pixels + self.offset_x
 		self.cropped_y = titlebar_pixels + self.offset_y
 
@@ -66,7 +64,6 @@ class WindowCapture:
 
 	def run(self):
 		while not self.stopped:
-			
 			start = time()
 			screenshot = self.get_screenshot()
 			self.lock.acquire()
