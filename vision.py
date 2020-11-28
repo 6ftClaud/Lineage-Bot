@@ -8,7 +8,7 @@ class Vision:
 	# properties
 	screenshot = None
 	targets = []
-	fps=0
+	fps = 1
 
 	def __init__(self, screenshot):
 		self.lock = Lock()
@@ -28,7 +28,7 @@ class Vision:
 		targets = []
 		append = targets.append
 		for c in contours:
-			if cv.contourArea(c) > 50:
+			if cv.contourArea(c) > 100:
 				x, y, w, h = cv.boundingRect(c)
 				target = ((x + w / 2), (y + h / 2))
 				append(target)
@@ -46,5 +46,7 @@ class Vision:
 		while not self.stopped:
 			start = time()
 			targets = self.get_enemy_coordinates()
+			self.lock.acquire()
 			self.targets = targets
+			self.lock.release()
 			self.fps = round(1.0 / (time() - start), 1)

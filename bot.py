@@ -3,6 +3,7 @@ from time import sleep, time
 from math import sqrt
 import pyautogui
 import keyboard
+import mouse as m
 from pynput.mouse import Button, Controller
 import os
 
@@ -25,7 +26,7 @@ class BotActions:
 	lock = None
 
 	# output
-	message = ''
+	message = None
 
 	# properties
 	state = None
@@ -37,14 +38,16 @@ class BotActions:
 	player_health = 100
 	enemy_health = 0
 	buffed = True
+	sleep_between_targeting = 0
+	sleep_between_turning = 0
 	mouse = Controller()
+	time = 0
 
-	# abilitites (edit in main.py)
-	DEBUFF = ''
-	DAMAGE = ''
-	SUSTAIN = ''
-	TOGGLE = ''
-	fps=0
+	# abilitites (edit in settings.ini)
+	DEBUFF = None
+	DAMAGE = None
+	SUSTAIN = None
+	TOGGLE = None
 
 	def __init__(self, offset_x, offset_y, w, h, INITIALIZING_SECONDS, abilities):
 		self.lock = Lock()
@@ -65,35 +68,34 @@ class BotActions:
 	def target(self):
 		target_i = 0
 		targets = self.target_sorting(self.targets)
-
+		keyboard.press('SHIFT')
 		while not self.stopped and target_i < len(targets):
 			x, y = self.get_screen_position(targets[target_i])
-			keyboard.press('SHIFT')
-			pyautogui.click(x, y + 30, _pause=False)
-			keyboard.release('SHIFT')
-			sleep(0.1)
+			pyautogui.click(x, y + 25, _pause=False)
+			sleep(self.sleep_between_targeting)
 			if self.enemy_health == 100:
 				self.message = f"Clicking at X: {x}, y: {y}"
+				keyboard.release('SHIFT')
 				return True
-			else:
-				target_i += 1
+			target_i += 1
+		keyboard.release('SHIFT')
 
 	def attack(self):
 		timestamp = time()
-		sleep(0.05)
 		ability = self.DEBUFF
 		keyboard.send(ability)
 		while not self.stopped:
-			if self.enemy_health == 0:
-				break
-			elif (timestamp - time()) > 15:
+			if (timestamp - time()) > 15:
 				keyboard.send('ESC')
-				self.turn_camera(250)
+				self.turn_camera(500)
 				break
-			elif self.player_health <= 70:
+			elif self.enemy_health == 0:
+				keyboard.send('ESC')
+				break
+			elif self.player_health <= 70 and self.enemy_health > 0:
 				ability = self.SUSTAIN
 				keyboard.send(ability)
-			else:
+			elif self.player_health > 70 and self.enemy_health > 0:
 				ability = self.DAMAGE
 				keyboard.send(ability)
 			self.message = f"Clicking {ability}"
@@ -105,7 +107,7 @@ class BotActions:
 			return sqrt((pos[0] - my_pos[0])**2 + (pos[1] - my_pos[1])**2)
 		targets.sort(key=pythagorean_distance)
 		# remove targets that are further away than SEARCH_RADIUS
-		targets = [t for t in targets if pythagorean_distance(t) > 80]
+		targets = [t for t in targets if pythagorean_distance(t) > 100]
 		return targets
 
 	def turn_camera(self, distance):
@@ -113,7 +115,7 @@ class BotActions:
 		self.mouse.press(Button.right)
 		pyautogui.moveTo(distance, 0)
 		self.mouse.release(Button.right)
-		sleep(0.5)
+		sleep(self.sleep_between_turning)
 
 	def get_screen_position(self, pos):
 		return (pos[0] + self.offset_x, pos[1] + self.offset_y)
@@ -122,6 +124,13 @@ class BotActions:
 		self.lock.acquire()
 		self.targets = targets
 		self.lock.release()
+
+	def update_hp(self, player, enemy):
+		self.lock.acquire()
+		self.enemy_health = enemy
+		self.player_health = player
+		self.lock.release()
+
 
 	def start(self):
 		self.stopped = False
@@ -136,7 +145,6 @@ class BotActions:
 		# this is the main logic controller
 	def run(self):
 		while not self.stopped:
-			start = time()
 			if self.state == BotState.INITIALIZING:
 				sleep(self.INITIALIZING_SECONDS)
 				sleep(0.25)
@@ -172,5 +180,3 @@ class BotActions:
 					self.lock.release()
 				else:
 					pass
-			self.fps = round(1.0 / (time() - start), 1)
-

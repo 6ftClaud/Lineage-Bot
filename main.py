@@ -1,72 +1,76 @@
 from bot import BotActions, BotState
 from capture import WindowCapture
 from vision import Vision
+from time import time, sleep
 from utils import Utils
 import cv2 as cv
 import numpy as np
 import os
 import keyboard
 import curses
+
+
+import configparser
+Config = configparser.ConfigParser()
+Config.read("settings.ini")
+UI_info = Config.get('Settings', 'UI_info')
+titlebar = int(Config.get('Settings', 'Titlebar'))
+border = int(Config.get('Settings', 'Border'))
+to_village_offset = int(Config.get('Settings', 'To_village_offset'))
+seconds = int(Config.get('Settings', 'Seconds'))
+player_class = Config.get('Settings', 'Class')
+abilities = Config.get('Settings', 'Abilities').split(",")
+
+
 import argparse
-from time import time, sleep
-
-# Global Settings
-# full Lineage II /system/WindowsInfo.ini path
-UI_info = "/home/claud/.wine/drive_c/Program Files/Lineage II/system/WindowsInfo.ini"
-# titlebar and border size in px
-titlebar = 26
-border = 2
-# how long to wait until the bot starts
-seconds = 4
-# Set Archer/Mage
-player_class = "Mage"
-
-# abilities - DEBUFF, DAMAGE, SUSTAIN, NOBLESSE, TOGGLE 
-abilities = ['F1', 'F2', 'F3', 'F12']
 DEBUG = None
 parser = argparse.ArgumentParser()
-parser.add_argument('--debug', dest='DEBUG', action='store_true', help="Set to True if you want to see what the bot sees")
-parser.add_argument('--no-debug', dest='DEBUG', action='store_false', help="Set to False to only see console output")
-parser.set_defaults(DEBUG=False)
+parser = argparse.ArgumentParser(add_help=False)
+parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS, help='Debug flag is optional. Do not set anything to only see debug messages.')
+parser.add_argument('--screen', dest='DEBUG', action='store_true', help="Set to True if you want to see what the bot sees")
+parser.add_argument('--no-screen', dest='DEBUG', action='store_false', help="Set to False to only see ncurses output")
+parser.set_defaults(DEBUG=None)
 args = parser.parse_args()
 DEBUG = args.DEBUG
 
-wincap = WindowCapture(border, titlebar)
-wincap.start()
-while wincap.screenshot is None:
-	sleep(0.01)
-vision = Vision(wincap.screenshot)
-vision.start()
-bot = BotActions(wincap.offset_x, wincap.offset_y, wincap.w, wincap.h, seconds, abilities)
-bot.start()
-utils = Utils(wincap.offset_x, wincap.offset_y, wincap.w, wincap.h, UI_info, wincap.screenshot)
-utils.start()
-wincap.set_buff_bar_pos(utils.buff_bar_pos)
 
 def main():
+
+	wincap = WindowCapture(border, titlebar)
+	wincap.start()
+	while wincap.screenshot is None:
+		sleep(0.01)
+	vision = Vision(wincap.screenshot)
+	vision.start()
+	bot = BotActions(wincap.offset_x, wincap.offset_y, wincap.w, wincap.h, seconds, abilities)
+	bot.start()
+	utils = Utils(wincap.offset_x, wincap.offset_y, wincap.w, wincap.h, UI_info, wincap.screenshot, to_village_offset)
+	utils.start()
+	wincap.set_buff_bar_pos(utils.buff_bar_pos)
+	
 	if DEBUG == False:
 		screen = curses.initscr()
 
-	fps = 0
+	fps = 1
 	while(True):
 
 		start = time()
 		vision.screenshot = wincap.screenshot
 		utils.screenshot = wincap.screenshot
 		bot.update_targets(vision.targets)
+		bot.update_hp(utils.current_player_health, utils.current_enemy_health)
+		bot.sleep_between_targeting = (1 / wincap.fps + 1 / utils.fps + 1 / fps + 0.15) # + lag
+		bot.sleep_between_turning = (1 / vision.fps + 0.15)
 		
 		if not utils.solving_captcha:
 			if bot.state == BotState.INITIALIZING:
 				os.system('xdotool windowactivate $(xdotool search --onlyvisible --name "Lineage II")')
 			elif bot.state == BotState.SEARCHING:
-				bot.enemy_health = utils.current_enemy_health
-				bot.player_health = utils.current_player_health
+				pass
 			elif bot.state == BotState.ATTACKING:
-				bot.enemy_health = utils.current_enemy_health
-				bot.player_health = utils.current_player_health
+				pass
 			elif bot.state == BotState.REBUFFING:
 				if utils.rebuff():
-					bot.player_health = utils.current_player_health
 					bot.buffed = True
 
 		elif utils.solving_captcha:
@@ -105,14 +109,13 @@ def main():
 		elif DEBUG == False:
 			# output
 			screen.clear()
-			screen.addstr(f"Current player health is {utils.current_player_health}%\n")
-			screen.addstr(f"Current enemy health is {utils.current_enemy_health}%\n")
+			screen.addstr(f"Current player health is {bot.player_health}%\n")
+			screen.addstr(f"Current enemy  health is {bot.enemy_health}%\n")
 			screen.addstr(f"{bot.message}\n\n")
-			screen.addstr(f"Main loop fps: {fps}\n")
+			screen.addstr(f"main    fps: {fps}\n")
 			screen.addstr(f"capture fps: {wincap.fps}\n")
-			screen.addstr(f"bot fps: {bot.fps}\n")
-			screen.addstr(f"utils fps: {utils.fps}\n")
-			screen.addstr(f"vision fps: {vision.fps}\n")
+			screen.addstr(f"utils   fps: {utils.fps}\n")
+			screen.addstr(f"vision  fps: {vision.fps}\n")
 			screen.refresh()
 			if keyboard.is_pressed('q'):
 				wincap.stop()
@@ -120,6 +123,14 @@ def main():
 				bot.stop()
 				utils.stop()
 				curses.endwin()
+				break
+
+		elif DEBUG == None:
+			if keyboard.is_pressed('q'):
+				wincap.stop()
+				vision.stop()
+				bot.stop()
+				utils.stop()
 				break
 		fps = round(1.0 / (time() - start), 1)
 

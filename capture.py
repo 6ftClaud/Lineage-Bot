@@ -17,7 +17,7 @@ class WindowCapture:
 	offset_x = 0
 	offset_y = 0
 	buff_bar_pos = (0, 0)
-	fps = 0
+	fps = 1
 	sct = mss()
 	mon = None
 
@@ -28,10 +28,10 @@ class WindowCapture:
 
 		data = os.popen('wmctrl -lG | grep "Lineage II"').read()
 		variables = data.split()
-		window_rect[0] = int(float(variables[2]))
-		window_rect[1] = int(float(variables[3]))
-		window_rect[2] = int(float(variables[4]))
-		window_rect[3] = int(float(variables[5]))
+		window_rect[0] = int(variables[2])
+		window_rect[1] = int(variables[3])
+		window_rect[2] = int(variables[4])
+		window_rect[3] = int(variables[5])
 
 		self.offset_x = window_rect[0]
 		self.offset_y = window_rect[1]
@@ -42,7 +42,7 @@ class WindowCapture:
 		self.w = window_rect[2]
 		self.h = window_rect[3]
 
-		self.mon = {'top' : self.offset_y, 'left' : self.offset_x, 'width' : self.w, 'height' : self.h}
+		self.mon = {'top' : self.offset_y, 'left' : self.offset_x, 'width' : self.w - 50, 'height' : self.h - 50}
 
 
 	def set_buff_bar_pos(self, buff_bar_pos):

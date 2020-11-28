@@ -7,6 +7,7 @@ import pytesseract
 import cv2 as cv
 import numpy as np
 import os
+import requests
 from time import sleep, time
 
 
@@ -24,10 +25,10 @@ class Utils:
 	solving_captcha = False
 	kbd = keyboard.Controller()
 
-	max_player_health = 30.0
-	max_enemy_health = 30.0
-	current_player_health = 100
-	current_enemy_health = 100
+	max_player_health = 30.0 # px
+	max_enemy_health = 30.0 # px
+	current_player_health = 100 # %
+	current_enemy_health = 100 # %
 
 	player_hp_x_pos = 0
 	player_hp_y_pos = 0
@@ -46,22 +47,25 @@ class Utils:
 	offset_y = 0
 	w = 0
 	h = 0
-	fps=0
 
-	def __init__(self, offset_x, offset_y, w, h, UI_info, screenshot):
+	to_village_offset = 0
+	fps = 1
+
+	def __init__(self, offset_x, offset_y, w, h, UI_info, screenshot, to_village_offset):
 		self.lock = Lock()
 
 		self.timestamp = time()
 		self.screenshot = screenshot
 
+		self.to_village_offset = to_village_offset
 		self.offset_x = offset_x
 		self.offset_y = offset_y
 		self.w = w
 		self.h = h
 		self.get_UI_positions(UI_info, offset_x, offset_y)
 
-		self.farmingzones = ((int(float(self.quest_window_x)) + offset_x + 165), (int(float(self.quest_window_y)) + 203))
-		self.dmg1 = ((int(float(self.quest_window_x)) + offset_x + 165), (int(float(self.quest_window_y)) + 234))
+		self.farmingzones = (self.quest_window_x + 165), (self.quest_window_y + 203)
+		self.dmg1 = (self.quest_window_x + 165), (self.quest_window_y + 234)
 
 	def get_UI_positions(self, UI_info, offset_x, offset_y):
 		lines = []
@@ -72,21 +76,21 @@ class Utils:
 					lines.append(value)
 
 		player_status = lines[16:18]
-		self.player_hp_x_pos = int(float(player_status[0])) + 16
-		self.player_hp_y_pos = int(float(player_status[1])) + 41
+		self.player_hp_x_pos = int(player_status[0]) + 16
+		self.player_hp_y_pos = int(player_status[1]) + 41
 		self.player_hp_bar_width = 150
 		self.player_hp_bar_height = 1
 
 		enemy_status = lines[24:26]
-		self.enemy_hp_x_pos = int(float(enemy_status[0])) + 16
-		self.enemy_hp_y_pos = int(float(enemy_status[1])) + 28
+		self.enemy_hp_x_pos = int(enemy_status[0]) + 16
+		self.enemy_hp_y_pos = int(enemy_status[1]) + 28
 		self.enemy_hp_bar_width = 150
 		self.enemy_hp_bar_height = 1
 
 		self.buff_bar_pos = (lines[40], lines[41])
 
-		self.quest_window_x = int(float(lines[28])) + offset_x
-		self.quest_window_y = int(float(lines[29])) + offset_y
+		self.quest_window_x = int(lines[28]) + offset_x
+		self.quest_window_y = int(lines[29]) + offset_y
 
 
 
@@ -107,6 +111,7 @@ class Utils:
 		return percent_health
 
 	def enemy_health(self):
+		self.time = time()
 		y = self.enemy_hp_y_pos
 		h = self.enemy_hp_bar_height + y
 		x = self.enemy_hp_x_pos
@@ -134,7 +139,7 @@ class Utils:
 	def rebuff(self):
 		self.message = f"Rebuffing"
 		sleep(3)
-		pyautogui.click((self.w / 2 + self.offset_x), (self.h / 2 + self.offset_y - 85))
+		pyautogui.click((self.w / 2 + self.offset_x), (self.h / 2 + self.offset_y - self.to_village_offset))
 		sleep(5)
 		keys.send('F11')
 		self.target("/target gatekeeper")
@@ -147,10 +152,10 @@ class Utils:
 		return True
 
 	def solve_captcha(self):
-		x = self.quest_window_x + 50
+		x = self.quest_window_x + 52
 		y = self.quest_window_y + 115
 		w = 190
-		h = 50
+		h = 46
 		api_key = 'd6aaaaa8d888957'
 		payload = {'isOverlayRequired': False,
 					   'apikey': api_key,
@@ -168,6 +173,9 @@ class Utils:
 			j = requests.post('https://api.ocr.space/parse/image', files={f_path: f}, data=payload).json()
 			if j['ParsedResults']:
 				result = j['ParsedResults'][0]['ParsedText']
+		if '.' or ',' in result:
+			result = result.replace('.','')
+			result = result.replace(',','')
 		pyautogui.click((x + w / 2), (y + 65))
 		self.kbd.type(result)
 		pyautogui.click((x + w / 2), (y + 100))
