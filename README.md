@@ -21,25 +21,26 @@ edit '/usr/lib/python3.8/site-packages/opencv_lineage/settings.ini' file.
 #### cloning installation:  
 ```  
 $ git clone https://github.com/6ftClaud/Lineage-Bot  
+$ sudo su  
 $ pacman -S (or apt install) wmctrl xdotool  
 $ pip install numpy opencv-python PILLOW keyboard pyautogui pynput mss pytesseract requests  
 ```  
 edit settings.ini  
 ### Usage  
-The bot must be run as administrator (sudo).  
-Run it with a screen that shows what the bot sees:  
+##### pip:
 ```  
-$ pip: opencv-lineage --screen  
-$ cloned: sudo python main.py --screen  
+$ sudo su  
+$ opencv-lineage  
 ```  
-Run it with an ncurses console window  
+##### cloned:
 ```  
-$ pip: opencv-lineage --no-screen  
-$ cloned: sudo python main.py --no-screen  
+$ sudo su  
+$ python main.py
 ```  
-Run it without any output whatsoever:  
-```  
-$ pip: opencv-lineage  
-$ cloned: sudo python main.py  
-```  
-Press 'q' any time to stop the bot.
+Available flags:  
+--screen : run it with a screen that shows what the bot sees:  
+--no-screen : run it with an ncurses console window  
+none : runs without any output whatsoever  
+e.g. opencv-lineage --screen  
+  
+Press 'q' any time to stop the bot.  
