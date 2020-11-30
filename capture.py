@@ -4,7 +4,7 @@ import os
 from threading import Lock
 from threading import Thread
 from mss import mss
-from time import time
+from time import time, sleep
 
 
 class WindowCapture:
@@ -20,7 +20,7 @@ class WindowCapture:
     offset_x = 0
     offset_y = 0
     buff_bar_pos = (0, 0)
-    fps = 1
+    fps = 100
     sct = mss()
     mon = None
 

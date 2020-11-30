@@ -2,7 +2,7 @@ import cv2 as cv
 
 from threading import Lock
 from threading import Thread
-from time import time
+from time import time, sleep
 
 
 class Vision:
@@ -10,7 +10,7 @@ class Vision:
     # properties
     screenshot = None
     targets = []
-    fps = 1
+    fps = 100
 
     def __init__(self, screenshot):
         self.lock = Lock()

@@ -52,7 +52,7 @@ class Utils:
     h = 0
 
     to_village_offset = 0
-    fps = 1
+    fps = 100
 
     def __init__(self, offset_x, offset_y, w, h, UI_info, screenshot, to_village_offset):
         self.lock = Lock()
@@ -188,7 +188,7 @@ class Utils:
         w = 310
         h = 400
         image = ImageGrab.grab(bbox=(x, y, w + x, h + y))
-        text = pytesseract.image_to_string(image)
+        text = pytesseract.image_to_string(cv.cvtColor(np.array(image), cv.COLOR_BGR2GRAY), lang='eng')
         if "captcha" in text:
             self.solving_captcha = True
             self.solve_captcha()
@@ -231,5 +231,6 @@ class Utils:
             self.current_enemy_health = current_enemy_health
             self.current_player_health = current_player_health
             self.lock.release()
-            sleep(0.01)
+            # Need to cap the speed of it because it uses resources unnecessarily
             self.fps = round(1.0 / (time() - start), 1)
+            sleep(0.0005)

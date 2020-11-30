@@ -70,7 +70,7 @@ class BotActions:
         while not self.stopped and target_i < len(targets):
             x, y = self.get_screen_position(targets[target_i])
             pyautogui.click(x, y + 25, _pause=False)
-            sleep(0.08)
+            sleep(0.2)
             if self.enemy_health == 100:
                 self.message = f"Clicking at X: {x}, y: {y}"
                 keyboard.release('SHIFT')
