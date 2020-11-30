@@ -1,4 +1,5 @@
 ## Lineage II bot using OpenCV  
+[![Lineage II bot using OpenCV](http://img.youtube.com/vi/1KS7z7Z_g8Y/0.jpg)](http://www.youtube.com/watch?v=1KS7z7Z_g8Y)  
 ### Table of contents  
 * [General info](#general-info)  
 * [Technologies](#technologies)  
@@ -28,3 +29,4 @@ Run it without any output whatsoever:
 ```  
 $ opencv-lineage  
 ```  
+Press 'q' any time to stop the bot.
