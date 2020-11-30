@@ -231,4 +231,5 @@ class Utils:
             self.current_enemy_health = current_enemy_health
             self.current_player_health = current_player_health
             self.lock.release()
+            sleep(0.01)
             self.fps = round(1.0 / (time() - start), 1)

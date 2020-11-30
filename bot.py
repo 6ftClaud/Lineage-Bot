@@ -38,8 +38,6 @@ class BotActions:
     player_health = 100
     enemy_health = 0
     buffed = True
-    sleep_between_targeting = 0
-    sleep_between_turning = 0
     mouse = Controller()
     time = 0
 
@@ -72,7 +70,7 @@ class BotActions:
         while not self.stopped and target_i < len(targets):
             x, y = self.get_screen_position(targets[target_i])
             pyautogui.click(x, y + 25, _pause=False)
-            sleep(self.sleep_between_targeting)
+            sleep(0.08)
             if self.enemy_health == 100:
                 self.message = f"Clicking at X: {x}, y: {y}"
                 keyboard.release('SHIFT')
@@ -105,7 +103,7 @@ class BotActions:
         my_pos = (self.window_w / 2, self.window_h / 2)
 
         def pythagorean_distance(pos):
-            return sqrt((pos[0] - my_pos[0])**2 + (pos[1] - my_pos[1])**2)
+            return sqrt((float(pos[0]) - my_pos[0])**2 + (float(pos[1]) - my_pos[1])**2)
         targets.sort(key=pythagorean_distance)
         # remove targets that are further away than SEARCH_RADIUS
         targets = [t for t in targets if pythagorean_distance(t) > 100]
@@ -118,7 +116,7 @@ class BotActions:
         self.mouse.press(Button.right)
         pyautogui.moveTo(distance, 0)
         self.mouse.release(Button.right)
-        sleep(self.sleep_between_turning)
+        sleep(0.2)
 
     def get_screen_position(self, pos):
         return (pos[0] + self.offset_x, pos[1] + self.offset_y)

@@ -64,19 +64,17 @@ if __name__ == "__main__":
         start = time()
         vision.screenshot = wincap.screenshot
         utils.screenshot = wincap.screenshot
-        bot.update_targets(vision.targets)
-        bot.update_hp(utils.current_player_health, utils.current_enemy_health)
-        bot.sleep_between_targeting = (1 / wincap.fps + 1 / utils.fps + 1 / fps)
-        bot.sleep_between_turning = (1 / vision.fps + 0.15)
 
         if not utils.solving_captcha:
             if bot.state == BotState.INITIALIZING:
                 os.system('xdotool windowactivate \
                 $(xdotool search --onlyvisible --name "Lineage II")')
             elif bot.state == BotState.SEARCHING:
-                pass
+                bot.update_targets(vision.targets)
+                bot.update_hp(utils.current_player_health, utils.current_enemy_health)
             elif bot.state == BotState.ATTACKING:
-                pass
+                bot.update_hp(utils.current_player_health, utils.current_enemy_health)
+                bot.update_targets(vision.targets)
             elif bot.state == BotState.REBUFFING:
                 if utils.rebuff():
                     bot.buffed = True
@@ -117,8 +115,8 @@ if __name__ == "__main__":
         # output
         elif DEBUG is False:
             screen.clear()
-            screen.addstr(f"Current player health is {bot.player_health}%\n")
-            screen.addstr(f"Current enemy  health is {bot.enemy_health}%\n")
+            screen.addstr(f"Current player health is {utils.current_player_health}%\n")
+            screen.addstr(f"Current enemy  health is {utils.current_enemy_health}%\n")
             screen.addstr(f"{bot.message}\n\n")
             screen.addstr(f"main    fps: {fps}\n")
             screen.addstr(f"capture fps: {wincap.fps}\n")

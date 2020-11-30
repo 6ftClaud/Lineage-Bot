@@ -19,7 +19,7 @@ class Vision:
     # gets X and Y coordinates of enemies
     def get_enemy_coordinates(self):
         # converting screen to grayscale
-        screen = cv.cvtColor(self.screenshot, cv.COLOR_BGR2GRAY)
+        screen = cv.cvtColor(self.screenshot, cv.COLOR_RGB2GRAY)
         # finding white text (enemies)
         ret, enemies = cv.threshold(screen, 252, 255, cv.THRESH_BINARY)
         # forms a white bar in order to get the X and Y coordinates with the findContours and rectangle cv functions
@@ -31,7 +31,7 @@ class Vision:
         targets = []
         append = targets.append
         for c in contours:
-            if cv.contourArea(c) > 100:
+            if cv.contourArea(c) > 50:
                 x, y, w, h = cv.boundingRect(c)
                 target = ((x + w / 2), (y + h / 2))
                 append(target)
