@@ -1,5 +1,6 @@
 ## Lineage II bot using OpenCV  
-[![Lineage II bot using OpenCV](http://img.youtube.com/vi/1KS7z7Z_g8Y/0.jpg)](http://www.youtube.com/watch?v=1KS7z7Z_g8Y)  
+### Video:
+[![Lineage II bot using OpenCV](https://i.imgur.com/6iqhHLB.png)](http://www.youtube.com/watch?v=1KS7z7Z_g8Y)  
 ### Table of contents  
 * [General info](#general-info)  
 * [Technologies](#technologies)  
