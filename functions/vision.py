@@ -10,7 +10,7 @@ class Vision:
     # properties
     screenshot = None
     targets = []
-    fps = 100
+    fps = 1
 
     def __init__(self, screenshot):
         self.lock = Lock()
@@ -53,3 +53,4 @@ class Vision:
             self.targets = targets
             self.lock.release()
             self.fps = round(1.0 / (time() - start), 1)
+            sleep(0.005)

@@ -52,7 +52,7 @@ class Utils:
     h = 0
 
     to_village_offset = 0
-    fps = 100
+    fps = 1
 
     def __init__(self, offset_x, offset_y, w, h, UI_info, screenshot, to_village_offset):
         self.lock = Lock()
@@ -233,4 +233,4 @@ class Utils:
             self.lock.release()
             # Need to cap the speed of it because it uses resources unnecessarily
             self.fps = round(1.0 / (time() - start), 1)
-            sleep(0.0005)
+            sleep(0.005)

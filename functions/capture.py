@@ -4,7 +4,7 @@ import os
 from threading import Lock
 from threading import Thread
 from mss import mss
-from time import time, sleep
+from time import time
 
 
 class WindowCapture:

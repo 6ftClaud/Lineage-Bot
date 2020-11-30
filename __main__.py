@@ -5,18 +5,15 @@ import cv2 as cv
 import keyboard
 import os
 
-from capture import WindowCapture
-from vision import Vision
-from bot import BotActions
-from bot import BotState
-from utils import Utils
+from .functions import *
 from time import sleep
 from time import time
 
 
 # Set up config
+path = os.path.dirname(os.path.abspath(__file__)) + 'settings.ini'
 Config = configparser.ConfigParser()
-Config.read("settings.ini")
+Config.read(path)
 UI_info = Config.get('Settings', 'UI_info')
 titlebar = int(Config.get('Settings', 'Titlebar'))
 border = int(Config.get('Settings', 'Border'))
@@ -40,7 +37,7 @@ args = parser.parse_args()
 DEBUG = args.DEBUG
 
 
-if __name__ == "__main__":
+def main():
 
     wincap = WindowCapture(border, titlebar)
     wincap.start()
@@ -139,3 +136,7 @@ if __name__ == "__main__":
                 utils.stop()
                 break
         fps = round(1.0 / (time() - start), 1)
+
+
+if __name__ == "__main__":
+    main()
