@@ -9,6 +9,9 @@ from functions import *
 from time import sleep
 from time import time
 
+# Check to see what Operating System is being used. Delete these 2 lines if you want to try anyway.
+import platform
+assert ('Linux' in platform.system()), "The bot only works on Linux."
 
 # Set up config
 path = os.path.dirname(os.path.abspath(__file__)) + '/settings.ini'
