@@ -49,8 +49,7 @@ class Vision:
         while not self.stopped:
             start = time()
             targets = self.get_enemy_coordinates()
-            self.lock.acquire()
-            self.targets = targets
-            self.lock.release()
+            with self.lock:
+                self.targets = targets
             self.fps = round(1.0 / (time() - start), 1)
             sleep(0.005)

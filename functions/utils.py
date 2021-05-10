@@ -6,12 +6,10 @@ import pyautogui
 import pytesseract
 import requests
 
+from threading import Lock, Thread
 from PIL import ImageGrab
 from pynput import keyboard
-from threading import Lock
-from threading import Thread
-from time import sleep
-from time import time
+from time import sleep, time
 
 
 class Utils:
@@ -227,10 +225,9 @@ class Utils:
 
             current_enemy_health = self.enemy_health()
             current_player_health = self.player_health()
-            self.lock.acquire()
-            self.current_enemy_health = current_enemy_health
-            self.current_player_health = current_player_health
-            self.lock.release()
+            with self.lock:
+                self.current_enemy_health = current_enemy_health
+                self.current_player_health = current_player_health
             # Need to cap the speed of it because it uses resources unnecessarily
             self.fps = round(1.0 / (time() - start), 1)
             sleep(0.005)
