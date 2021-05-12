@@ -1,0 +1,9 @@
+numpy
+opencv-python
+PILLOW
+keyboard
+pyautogui
+pynput
+mss
+pytesseract
+requests 
