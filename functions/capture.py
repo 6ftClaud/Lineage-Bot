@@ -1,8 +1,7 @@
 import numpy as np
 import os
 
-from threading import Lock
-from threading import Thread
+from threading import Lock, Thread
 from mss import mss
 from time import time
 
@@ -20,9 +19,9 @@ class WindowCapture:
     offset_x = 0
     offset_y = 0
     buff_bar_pos = (0, 0)
-    fps = 100
-    sct = mss()
-    mon = None
+    fps = 1
+    screen = mss()
+    region = None
 
     def __init__(self, border_pixels, titlebar_pixels):
         self.lock = Lock()
@@ -44,14 +43,14 @@ class WindowCapture:
 
         self.w = window_rect[2]
         self.h = window_rect[3]
-        self.mon = {'top': self.offset_y, 'left': self.offset_x,
-                    'width': self.w - 50, 'height': self.h - 50}
+        self.region = {'top': self.offset_y, 'left': self.offset_x,
+                       'width': self.w - 50, 'height': self.h - 50}
 
     def set_buff_bar_pos(self, buff_bar_pos):
         self.buff_bar_pos = buff_bar_pos
 
     def get_screenshot(self):
-        img = np.array(self.sct.grab(self.mon))
+        img = np.array(self.screen.grab(self.region))
         # hide buff bar
         # (y:h+y, x:w+x)
         img[int(self.buff_bar_pos[1]):105 + int(self.buff_bar_pos[1]),
@@ -70,7 +69,6 @@ class WindowCapture:
         while not self.stopped:
             start = time()
             screenshot = self.get_screenshot()
-            self.lock.acquire()
-            self.screenshot = screenshot
-            self.lock.release()
+            with self.lock:
+                self.screenshot = screenshot
             self.fps = round(1.0 / (time() - start), 1)

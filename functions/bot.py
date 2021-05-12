@@ -1,12 +1,9 @@
 import keyboard
 import pyautogui
 
-from threading import Lock
-from threading import Thread
-from pynput.mouse import Button
-from pynput.mouse import Controller
-from time import sleep
-from time import time
+from threading import Lock, Thread
+from pynput.mouse import Button, Controller
+from time import time, sleep
 from math import sqrt
 
 
@@ -39,7 +36,6 @@ class BotActions:
     enemy_health = 0
     buffed = True
     mouse = Controller()
-    time = 0
 
     # abilitites (edit in settings.ini)
     DEBUFF = None
@@ -122,15 +118,13 @@ class BotActions:
         return (pos[0] + self.offset_x, pos[1] + self.offset_y)
 
     def update_targets(self, targets):
-        self.lock.acquire()
-        self.targets = targets
-        self.lock.release()
+        with self.lock:
+            self.targets = targets
 
     def update_hp(self, player, enemy):
-        self.lock.acquire()
-        self.enemy_health = enemy
-        self.player_health = player
-        self.lock.release()
+        with self.lock:
+            self.enemy_health = enemy
+            self.player_health = player
 
     def start(self):
         self.stopped = False
@@ -149,34 +143,29 @@ class BotActions:
                 sleep(self.init_seconds)
                 sleep(0.25)
                 keyboard.send('F12')
-                self.lock.acquire()
-                self.state = BotState.SEARCHING
-                self.lock.release()
+                with self.lock:
+                    self.state = BotState.SEARCHING
 
             elif self.state == BotState.SEARCHING:
                 self.message = "Looking for enemies"
                 if self.player_health == 0:
                     self.buffed = False
-                    self.lock.acquire()
-                    self.state = BotState.REBUFFING
-                    self.lock.release()
+                    with self.lock:
+                        self.state = BotState.REBUFFING
                 elif self.target():
-                    self.lock.acquire()
-                    self.state = BotState.ATTACKING
-                    self.lock.release()
+                    with self.lock:
+                        self.state = BotState.ATTACKING
                 else:
                     self.turn_camera(250)
 
             elif self.state == BotState.ATTACKING:
                 self.attack()
-                self.lock.acquire()
-                self.state = BotState.SEARCHING
-                self.lock.release()
+                with self.lock:
+                    self.state = BotState.SEARCHING
 
             elif self.state == BotState.REBUFFING:
                 if self.buffed:
-                    self.lock.acquire()
-                    self.state = BotState.SEARCHING
-                    self.lock.release()
+                    with self.lock:
+                        self.state = BotState.SEARCHING
                 else:
                     pass
