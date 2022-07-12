@@ -30,7 +30,3 @@ none : runs without any output whatsoever
 e.g. `python main.py --screen`  
   
 Press 'q' any time to stop the bot.  
-### TODO:  
-Add Windows support using Interception driver to make mouse clicks work  
-Add more classes (i.e. archer, spoiler) support  
-Clean up main.py because it is looking hella ugly at the moment
